@@ -99,6 +99,10 @@ out/
 # Runtime backups
 Saved/
 
+# Internal agent and working documents
+/AgentWorks/
+/docs/
+
 # Python caches
 __pycache__/
 *.py[cod]

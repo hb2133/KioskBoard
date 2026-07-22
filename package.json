@@ -13,6 +13,7 @@
     "package": "electron-forge package",
     "make": "electron-forge make",
     "publish": "electron-forge publish",
+    "check:git-scope": "node scripts/check-git-scope.mjs",
     "lint": "eslint --ext .ts,.tsx ."
   },
   "keywords": [],

@@ -2,8 +2,8 @@
 
 ## Entry
 
-에이전트 운영 문서는 `AgentWorks/` 아래에 있다.
-먼저 `AgentWorks/INDEX.md`를 읽는다.
+에이전트 운영 문서는 Git에 포함하지 않는 로컬 `AgentWorks/` 아래에 있다.
+디렉터리가 존재하는 환경에서는 먼저 `AgentWorks/INDEX.md`를 읽는다.
 
 ## Folder Index
 
@@ -31,3 +31,9 @@
 - 작업 진행 상태를 `AgentWorks/docs/`에 두지 않는다.
 - `AgentWorks/docs/project-rules/`와 `AgentWorks/docs/architecture/`의 역할을 혼동하지 않는다.
 - panel / section / controller / manager 경계를 먼저 지키고, 세부 구현은 그 다음에 진행한다.
+
+## Git Public Scope
+
+- `AgentWorks/`와 `docs/`는 로컬 작업 전용이며 Git에 stage, commit, push하지 않는다.
+- GitHub 작업 전 `npm run check:git-scope`를 실행한다.
+- 스크린샷처럼 GitHub README에 필요한 공개 자료는 `assets/`에 둔다.
