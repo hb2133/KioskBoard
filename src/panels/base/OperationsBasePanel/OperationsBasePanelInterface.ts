@@ -4,4 +4,5 @@ export interface OperationsBasePanelProps
 {
     Theme: AppTheme;
     OnToggleTheme: () => void;
+    OnSignOut: () => void;
 }

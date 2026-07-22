@@ -60,6 +60,7 @@ typings/
 # dotenv environment variables file
 .env
 .env.test
+.env.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -87,9 +88,16 @@ typings/
 
 # Vite
 .vite/
+dist-web/
+
+# Vercel
+.vercel/
 
 # Electron-Forge
 out/
+
+# Runtime backups
+Saved/
 
 # Python caches
 __pycache__/
@@ -98,3 +106,5 @@ __pycache__/
 # project_bootstrap managed
 CLAUDE.md
 log/
+.vercel
+.env*

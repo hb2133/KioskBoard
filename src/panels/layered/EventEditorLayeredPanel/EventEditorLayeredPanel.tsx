@@ -618,6 +618,33 @@ export function EventEditorLayeredPanel(Properties: EventEditorLayeredPanelProps
                             Value={Controller.Draft.EventName}
                         />
                     </label>
+                    <label className="FormField FormField--wide">
+                        <span>{Strings.Content}</span>
+                        <HangulTextInput
+                            IsHangulMode={IsHangulMode}
+                            OnToggleMode={() => SetIsHangulMode((CurrentMode) => CurrentMode === false)}
+                            OnValueChange={(Value) => Controller.UpdateField('Content', Value)}
+                            Value={Controller.Draft.Content}
+                        />
+                    </label>
+                    <label className="FormField">
+                        <span>{Strings.ManagerName}</span>
+                        <HangulTextInput
+                            IsHangulMode={IsHangulMode}
+                            OnToggleMode={() => SetIsHangulMode((CurrentMode) => CurrentMode === false)}
+                            OnValueChange={(Value) => Controller.UpdateField('ManagerName', Value)}
+                            Value={Controller.Draft.ManagerName}
+                        />
+                    </label>
+                    <label className="FormField">
+                        <span>{Strings.ManagerContact}</span>
+                        <HangulTextInput
+                            IsHangulMode={IsHangulMode}
+                            OnToggleMode={() => SetIsHangulMode((CurrentMode) => CurrentMode === false)}
+                            OnValueChange={(Value) => Controller.UpdateField('ManagerContact', Value)}
+                            Value={Controller.Draft.ManagerContact}
+                        />
+                    </label>
                     <div className="FormField">
                         <span>{Strings.EventStartDate}</span>
                         <LocalizedPickerField

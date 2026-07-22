@@ -3,7 +3,7 @@ import type { EventRecord } from '@/panels/base/OperationsBasePanel/controller/O
 
 const EventRecordsStorageKey = 'kioskboard.event-records.v1';
 
-function NormalizeEventRecord(Value: unknown): EventRecord | null
+export function NormalizeEventRecord(Value: unknown): EventRecord | null
 {
     if (typeof Value !== 'object' || Value == null)
     {
@@ -35,6 +35,9 @@ function NormalizeEventRecord(Value: unknown): EventRecord | null
         Id: Candidate.Id as string,
         CompanyName: Candidate.CompanyName as string,
         EventName: Candidate.EventName as string,
+        Content: typeof Candidate.Content === 'string' ? Candidate.Content : '',
+        ManagerName: typeof Candidate.ManagerName === 'string' ? Candidate.ManagerName : '',
+        ManagerContact: typeof Candidate.ManagerContact === 'string' ? Candidate.ManagerContact : '',
         EventStartDate: Candidate.EventStartDate as string,
         EventEndDate: Candidate.EventEndDate as string,
         AssignedKioskIds: Array.isArray(Candidate.AssignedKioskIds)

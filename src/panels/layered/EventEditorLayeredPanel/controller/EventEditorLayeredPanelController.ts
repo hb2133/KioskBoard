@@ -23,6 +23,9 @@ function CreateInitialDraft(Record: EventRecord | null): EventRecordDraft
         return {
             CompanyName: Record.CompanyName,
             EventName: Record.EventName,
+            Content: Record.Content,
+            ManagerName: Record.ManagerName,
+            ManagerContact: Record.ManagerContact,
             EventStartDate: Record.EventStartDate,
             EventEndDate: Record.EventEndDate,
             AssignedKioskIds: Record.AssignedKioskIds,
@@ -39,6 +42,9 @@ function CreateInitialDraft(Record: EventRecord | null): EventRecordDraft
     return {
         CompanyName: '',
         EventName: '',
+        Content: '',
+        ManagerName: '',
+        ManagerContact: '',
         EventStartDate: '',
         EventEndDate: '',
         AssignedKioskIds: [],
@@ -104,6 +110,9 @@ export function UseEventEditorLayeredPanelController(
             ...Draft,
             CompanyName: Draft.CompanyName.trim(),
             EventName: Draft.EventName.trim(),
+            Content: Draft.Content.trim(),
+            ManagerName: Draft.ManagerName.trim(),
+            ManagerContact: Draft.ManagerContact.trim(),
             Notes: Draft.Notes.trim(),
         });
     }

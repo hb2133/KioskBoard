@@ -8,6 +8,7 @@ export interface HeaderSectionProps
     OnAddEvent: () => void;
     OnOpenSettings: () => void;
     OnToggleTheme: () => void;
+    OnSignOut: () => void;
 }
 
 export function HeaderSection(Properties: HeaderSectionProps)
@@ -30,6 +31,13 @@ export function HeaderSection(Properties: HeaderSectionProps)
                 <p className="HeaderSection__date">{Strings.TodayLabel} · {Today}</p>
             </div>
             <div className="HeaderActions">
+                <button
+                    className="ThemeToggleButton"
+                    onClick={Properties.OnSignOut}
+                    type="button"
+                >
+                    {Strings.SignOut}
+                </button>
                 <button
                     aria-label={Strings.KioskSettingsTitle}
                     className="ThemeToggleButton SettingsButton"

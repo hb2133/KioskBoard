@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, webFrame } from 'electron';
 import { WindowControlChannels } from '@/core/infra/window/WindowControlChannels';
+import { BackupChannels } from '@/core/infra/backup/BackupChannels';
 
 const MinimumZoomFactor = 0.7;
 const MaximumZoomFactor = 1.5;
@@ -52,4 +53,6 @@ window.addEventListener('wheel', (Event) =>
 
 contextBridge.exposeInMainWorld('WorkbenchBridge', {
     SetWindowTheme: (Theme: 'light' | 'dark') => ipcRenderer.send(WindowControlChannels.SetTheme, Theme),
+    SaveLatestBackup: (Snapshot: unknown) => ipcRenderer.invoke(BackupChannels.SaveLatest, Snapshot),
+    SelectBackupFile: () => ipcRenderer.invoke(BackupChannels.SelectFile),
 });

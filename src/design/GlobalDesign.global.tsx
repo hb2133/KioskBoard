@@ -190,6 +190,17 @@ export function GlobalStyles()
                 min-height: 46px;
                 padding: 0 20px;
             }
+
+            @media (max-width: 767px) {
+                html[data-runtime="web"] body {
+                    min-width: 0;
+                }
+
+                html[data-runtime="web"] .DesktopContentViewport {
+                    height: calc(100% - 42px);
+                    overflow-x: hidden;
+                }
+            }
         `}</style>
     );
 }

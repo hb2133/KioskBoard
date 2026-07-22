@@ -8,7 +8,11 @@ import type { KioskSettingsLayeredPanelProps } from './KioskSettingsLayeredPanel
 export function KioskSettingsLayeredPanel(Properties: KioskSettingsLayeredPanelProps)
 {
     const [IsHangulMode, SetIsHangulMode] = useState(false);
-    const Controller = UseKioskSettingsLayeredPanelController(Properties.OnAddKiosk);
+    const Controller = UseKioskSettingsLayeredPanelController(
+        Properties.OnAddKiosk,
+        Properties.OnSelectBackupFile,
+        Properties.OnRestoreBackup,
+    );
 
     function HandleSubmit(Event: FormEvent<HTMLFormElement>): void
     {
@@ -87,6 +91,62 @@ export function KioskSettingsLayeredPanel(Properties: KioskSettingsLayeredPanelP
                         ))}
                     </div>
                 )}
+
+                <section className="BackupRestoreSection">
+                    <div className="BackupRestoreSection__header">
+                        <div>
+                            <strong>{Strings.BackupAndRestore}</strong>
+                            <p>{Strings.BackupDescription}</p>
+                        </div>
+                        <button
+                            className="Button Button--secondary"
+                            disabled={Controller.IsSelectingBackup === true || Controller.IsRestoringBackup === true}
+                            onClick={() => void Controller.SelectBackup()}
+                            type="button"
+                        >
+                            {Controller.IsSelectingBackup === true ? Strings.Loading : Strings.SelectBackupFile}
+                        </button>
+                    </div>
+
+                    {Controller.BackupFile == null ? (
+                        <div className="BackupRestoreEmpty">{Strings.BackupNotSelected}</div>
+                    ) : (
+                        <div className="BackupRestorePreview">
+                            <strong>{Controller.BackupFile.Path.split(/[\\/]/).pop()}</strong>
+                            <span>
+                                {new Intl.DateTimeFormat('ko-KR', {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                }).format(new Date(Controller.BackupFile.SavedAt))}
+                            </span>
+                            <div>
+                                <span>행사 {Controller.BackupFile.RecordCount}건</span>
+                                <span>키오스크 {Controller.BackupFile.KioskCount}대</span>
+                            </div>
+                            {Controller.BackupMessage != null && (
+                                <p className={Controller.IsRestoreConfirmationPending === true
+                                    ? 'BackupRestoreMessage BackupRestoreMessage--warning'
+                                    : 'BackupRestoreMessage'}>
+                                    {Controller.BackupMessage}
+                                </p>
+                            )}
+                            <button
+                                className={Controller.IsRestoreConfirmationPending === true
+                                    ? 'Button Button--danger'
+                                    : 'Button Button--secondary'}
+                                disabled={Controller.IsRestoringBackup === true}
+                                onClick={() => void Controller.RestoreBackup()}
+                                type="button"
+                            >
+                                {Controller.IsRestoringBackup === true
+                                    ? Strings.Loading
+                                    : Controller.IsRestoreConfirmationPending === true
+                                        ? Strings.ConfirmRestoreBackup
+                                        : Strings.RestoreBackup}
+                            </button>
+                        </div>
+                    )}
+                </section>
             </div>
         </section>
     );

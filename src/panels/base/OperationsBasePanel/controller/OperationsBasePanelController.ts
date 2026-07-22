@@ -1,10 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Strings } from '@/core/localization/Strings';
 import type { ManagedKiosk } from '@/core/models/ManagedKiosk';
-import { LoadEventRecordsAction } from './actions/LoadEventRecordsAction';
+import type { KoreanHoliday } from '@/core/models/KoreanHoliday';
+import type { SelectedBackupFile } from '@/core/infra/backup/BackupTypes';
+import { LoadKoreanHolidays } from '@/core/infra/holidays/KoreanHolidayRepository';
+import {
+    DeleteSharedEvent,
+    DeleteSharedKiosk,
+    LoadSharedOperationsSnapshot,
+    ReplaceSharedOperationsSnapshot,
+    SeedSharedOperationsSnapshot,
+    SubscribeToSharedOperations,
+    UpsertSharedEvent,
+    UpsertSharedKiosk,
+} from '@/core/infra/supabase/SharedOperationsRepository';
+import { GetSupabaseClient } from '@/core/infra/supabase/SupabaseClient';
+import { LoadEventRecordsAction, NormalizeEventRecord } from './actions/LoadEventRecordsAction';
 import { LoadManagedKiosksAction } from './actions/LoadManagedKiosksAction';
 import { SaveEventRecordsAction } from './actions/SaveEventRecordsAction';
 import { SaveManagedKiosksAction } from './actions/SaveManagedKiosksAction';
+import { SaveLatestBackupAction } from './actions/SaveLatestBackupAction';
 import {
     AddOperationalStatus,
     BuildCalendarDays,
@@ -37,6 +52,7 @@ export interface OperationsBasePanelControllerModel
     StatusFilter: EventStatusFilter;
     CalendarMonth: string;
     CalendarDays: CalendarDay[];
+    CalendarHolidays: KoreanHoliday[];
     TodayKey: string;
     IsReady: boolean;
     StorageError: string | null;
@@ -57,6 +73,8 @@ export interface OperationsBasePanelControllerModel
     ToggleEventCompletion: (RecordId: string, Field: EventCompletionField) => void;
     AddManagedKiosk: (Name: string) => boolean;
     DeleteManagedKiosk: (KioskId: string) => void;
+    SelectBackupFile: () => Promise<SelectedBackupFile | null>;
+    RestoreBackup: (BackupFile: SelectedBackupFile) => Promise<boolean>;
 }
 
 export function UseOperationsBasePanelController(): OperationsBasePanelControllerModel
@@ -65,28 +83,88 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
     const [Records, SetRecords] = useState<EventRecord[]>([]);
     const [TodayKey, SetTodayKey] = useState(InitialToday);
     const [CurrentView, SetCurrentView] = useState<OperationsView>('ledger');
-    const [StatusFilter, SetStatusFilter] = useState<EventStatusFilter>('all');
+    const [StatusFilter, SetStatusFilter] = useState<EventStatusFilter>('upcoming');
     const [CalendarMonth, SetCalendarMonth] = useState(GetMonthKey(new Date()));
+    const [CalendarHolidays, SetCalendarHolidays] = useState<KoreanHoliday[]>([]);
     const [IsReady, SetIsReady] = useState(false);
     const [StorageError, SetStorageError] = useState<string | null>(null);
     const [LayeredPanel, SetLayeredPanel] = useState<OperationsLayeredPanel | null>(null);
     const [ManagedKiosks, SetManagedKiosks] = useState<ManagedKiosk[]>([]);
+    const IsRestoringBackup = useRef(false);
 
     useEffect(() =>
     {
-        try
+        let IsMounted = true;
+        let IsSynchronizing = false;
+        let HasCheckedInitialMigration = false;
+        const LocalRecords = LoadEventRecordsAction();
+        const LocalKiosks = LoadManagedKiosksAction();
+
+        async function ApplySharedSnapshot(): Promise<void>
         {
-            SetRecords(LoadEventRecordsAction());
-            SetManagedKiosks(LoadManagedKiosksAction());
+            if (IsSynchronizing === true || IsRestoringBackup.current === true)
+            {
+                return;
+            }
+
+            IsSynchronizing = true;
+            try
+            {
+                let Snapshot = await LoadSharedOperationsSnapshot();
+                const ShouldMigrateLocalSnapshot = HasCheckedInitialMigration === false
+                    && Snapshot.Records.length === 0
+                    && Snapshot.Kiosks.length === 0
+                    && (LocalRecords.length > 0 || LocalKiosks.length > 0);
+
+                HasCheckedInitialMigration = true;
+                if (ShouldMigrateLocalSnapshot === true)
+                {
+                    await SeedSharedOperationsSnapshot({ Records: LocalRecords, Kiosks: LocalKiosks });
+                    Snapshot = await LoadSharedOperationsSnapshot();
+                    if (
+                        Snapshot.Records.length < LocalRecords.length
+                        || Snapshot.Kiosks.length < LocalKiosks.length
+                    )
+                    {
+                        throw new Error('Shared migration did not copy every local record.');
+                    }
+                }
+
+                if (IsMounted === true)
+                {
+                    SetRecords(Snapshot.Records);
+                    SetManagedKiosks(Snapshot.Kiosks);
+                    SaveEventRecordsAction(Snapshot.Records);
+                    SaveManagedKiosksAction(Snapshot.Kiosks);
+                    void SaveLatestBackupAction(Snapshot).catch(() => SetStorageError(Strings.StorageError));
+                    SetStorageError(null);
+                }
+            }
+            catch
+            {
+                if (IsMounted === true)
+                {
+                    SetRecords(LocalRecords);
+                    SetManagedKiosks(LocalKiosks);
+                    SetStorageError(Strings.SharedStorageError);
+                }
+            }
+            finally
+            {
+                IsSynchronizing = false;
+                if (IsMounted === true) SetIsReady(true);
+            }
         }
-        catch
+
+        void ApplySharedSnapshot();
+        const Channel = SubscribeToSharedOperations(() => void ApplySharedSnapshot());
+
+        return () =>
         {
-            SetStorageError(Strings.StorageError);
-        }
-        finally
-        {
-            SetIsReady(true);
-        }
+            IsMounted = false;
+            const Client = GetSupabaseClient();
+            if (Client != null) void Client.removeChannel(Channel);
+        };
     }, []);
 
     useEffect(() =>
@@ -98,6 +176,30 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
 
         return () => window.clearInterval(Timer);
     }, []);
+
+    useEffect(() =>
+    {
+        let IsCurrent = true;
+        const [Year, Month] = CalendarMonth.split('-').map(Number);
+        const Years = Month === 1
+            ? [Year - 1, Year]
+            : Month === 12
+                ? [Year, Year + 1]
+                : [Year];
+
+        void LoadKoreanHolidays(Years).then((Holidays) =>
+        {
+            if (IsCurrent === true)
+            {
+                SetCalendarHolidays(Holidays);
+            }
+        });
+
+        return () =>
+        {
+            IsCurrent = false;
+        };
+    }, [CalendarMonth]);
 
     useEffect(() =>
     {
@@ -135,7 +237,8 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
     );
     const FilteredRecords = useMemo(
         () => RecordsWithStatus.filter((Record) => (
-            StatusFilter === 'all' || Record.OperationalStatus === StatusFilter
+            Record.OperationalStatus !== 'completed'
+            && (StatusFilter === 'upcoming' || Record.OperationalStatus === StatusFilter)
         )),
         [RecordsWithStatus, StatusFilter],
     );
@@ -158,6 +261,8 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
         {
             SaveEventRecordsAction(NextRecords);
             SetRecords(NextRecords);
+            void SaveLatestBackupAction({ Records: NextRecords, Kiosks: ManagedKiosks })
+                .catch(() => SetStorageError(Strings.StorageError));
             SetStorageError(null);
             return true;
         }
@@ -219,6 +324,8 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
         {
             SaveManagedKiosksAction(NextKiosks);
             SetManagedKiosks(NextKiosks);
+            void SaveLatestBackupAction({ Records, Kiosks: NextKiosks })
+                .catch(() => SetStorageError(Strings.StorageError));
             SetStorageError(null);
             return true;
         }
@@ -238,14 +345,20 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
             return false;
         }
 
-        return PersistManagedKiosks([
+        const Kiosk: ManagedKiosk = {
+            Id: globalThis.crypto.randomUUID(),
+            Name: NormalizedName,
+            CreatedAt: new Date().toISOString(),
+        };
+        const DidPersist = PersistManagedKiosks([
             ...ManagedKiosks,
-            {
-                Id: globalThis.crypto.randomUUID(),
-                Name: NormalizedName,
-                CreatedAt: new Date().toISOString(),
-            },
+            Kiosk,
         ]);
+        if (DidPersist === true)
+        {
+            void UpsertSharedKiosk(Kiosk).catch(() => SetStorageError(Strings.SharedStorageError));
+        }
+        return DidPersist;
     }
 
     function SaveEvent(Draft: EventRecordDraft): void
@@ -272,6 +385,7 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
 
         if (PersistRecords(NextRecords) === true)
         {
+            void UpsertSharedEvent(SavedRecord).catch(() => SetStorageError(Strings.SharedStorageError));
             SetLayeredPanel(null);
         }
     }
@@ -287,6 +401,7 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
 
         if (PersistRecords(NextRecords) === true)
         {
+            void DeleteSharedEvent(LayeredPanel.RecordId).catch(() => SetStorageError(Strings.SharedStorageError));
             SetLayeredPanel(null);
         }
     }
@@ -302,7 +417,75 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
             }
             : Record);
 
-        PersistRecords(NextRecords);
+        if (PersistRecords(NextRecords) === true)
+        {
+            const ChangedRecord = NextRecords.find((Record) => Record.Id === RecordId);
+            if (ChangedRecord != null)
+            {
+                void UpsertSharedEvent(ChangedRecord).catch(() => SetStorageError(Strings.SharedStorageError));
+            }
+        }
+    }
+
+    async function SelectBackupFile(): Promise<SelectedBackupFile | null>
+    {
+        try
+        {
+            return await window.WorkbenchBridge.SelectBackupFile();
+        }
+        catch
+        {
+            SetStorageError('백업 파일을 읽지 못했습니다.');
+            return null;
+        }
+    }
+
+    async function RestoreBackup(BackupFile: SelectedBackupFile): Promise<boolean>
+    {
+        const Snapshot = BackupFile.Snapshot as {
+            Records?: unknown[];
+            Kiosks?: ManagedKiosk[];
+        };
+        if (Array.isArray(Snapshot.Records) === false || Array.isArray(Snapshot.Kiosks) === false)
+        {
+            SetStorageError('올바른 KioskBoard 백업 파일이 아닙니다.');
+            return false;
+        }
+
+        const NormalizedRecords = Snapshot.Records
+            .map(NormalizeEventRecord)
+            .filter((Record): Record is EventRecord => Record != null);
+        if (NormalizedRecords.length !== Snapshot.Records.length)
+        {
+            SetStorageError('백업 파일에 올바르지 않은 행사 정보가 있습니다.');
+            return false;
+        }
+
+        IsRestoringBackup.current = true;
+        try
+        {
+            await ReplaceSharedOperationsSnapshot({
+                Records: NormalizedRecords,
+                Kiosks: Snapshot.Kiosks,
+            });
+            const RestoredSnapshot = await LoadSharedOperationsSnapshot();
+            SaveEventRecordsAction(RestoredSnapshot.Records);
+            SaveManagedKiosksAction(RestoredSnapshot.Kiosks);
+            await SaveLatestBackupAction(RestoredSnapshot);
+            SetRecords(RestoredSnapshot.Records);
+            SetManagedKiosks(RestoredSnapshot.Kiosks);
+            SetStorageError(null);
+            return true;
+        }
+        catch
+        {
+            SetStorageError('백업 복구에 실패했습니다. 기존 서버 데이터는 복원되었습니다.');
+            return false;
+        }
+        finally
+        {
+            IsRestoringBackup.current = false;
+        }
     }
 
     return {
@@ -314,6 +497,7 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
         StatusFilter,
         CalendarMonth,
         CalendarDays,
+        CalendarHolidays,
         TodayKey,
         IsReady,
         StorageError,
@@ -333,8 +517,14 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
         DeleteEvent,
         ToggleEventCompletion,
         AddManagedKiosk,
-        DeleteManagedKiosk: (KioskId) => PersistManagedKiosks(
-            ManagedKiosks.filter((Kiosk) => Kiosk.Id !== KioskId),
-        ),
+        DeleteManagedKiosk: (KioskId) =>
+        {
+            if (PersistManagedKiosks(ManagedKiosks.filter((Kiosk) => Kiosk.Id !== KioskId)) === true)
+            {
+                void DeleteSharedKiosk(KioskId).catch(() => SetStorageError(Strings.SharedStorageError));
+            }
+        },
+        SelectBackupFile,
+        RestoreBackup,
     };
 }

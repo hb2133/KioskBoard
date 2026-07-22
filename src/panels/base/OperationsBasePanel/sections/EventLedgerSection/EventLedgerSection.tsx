@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { Strings } from '@/core/localization/Strings';
 import type { ManagedKiosk } from '@/core/models/ManagedKiosk';
 import { FormatDateRange } from '@/panels/base/OperationsBasePanel/controller/OperationsBasePanelState';
@@ -25,92 +24,38 @@ export interface EventLedgerSectionProps
 }
 
 const StatusFilterOptions: Array<{ Value: EventStatusFilter; Label: string }> = [
-    { Value: 'all', Label: Strings.StatusAll },
+    { Value: 'upcoming', Label: Strings.StatusUpcoming },
     { Value: 'scheduled', Label: Strings.StatusScheduled },
     { Value: 'active', Label: Strings.StatusActive },
-    { Value: 'completed', Label: Strings.StatusCompleted },
 ];
 
-interface StatusFilterDropdownProps
+interface ProgressStatusFilterProps
 {
     Value: EventStatusFilter;
     OnChange: (Filter: EventStatusFilter) => void;
 }
 
-function StatusFilterDropdown(Properties: StatusFilterDropdownProps)
+function ProgressStatusFilter(Properties: ProgressStatusFilterProps)
 {
-    const DropdownRoot = useRef<HTMLDivElement>(null);
-    const [IsOpen, SetIsOpen] = useState(false);
-    const SelectedOption = StatusFilterOptions.find((Option) => Option.Value === Properties.Value)
-        ?? StatusFilterOptions[0];
-
-    useEffect(() =>
-    {
-        if (IsOpen === false)
-        {
-            return undefined;
-        }
-
-        function HandleOutsidePointerDown(Event: PointerEvent): void
-        {
-            if (DropdownRoot.current?.contains(Event.target as Node) === false)
-            {
-                SetIsOpen(false);
-            }
-        }
-
-        document.addEventListener('pointerdown', HandleOutsidePointerDown);
-        return () => document.removeEventListener('pointerdown', HandleOutsidePointerDown);
-    }, [IsOpen]);
-
-    function HandleKeyDown(Event: ReactKeyboardEvent<HTMLDivElement>): void
-    {
-        if (Event.key === 'Escape' && IsOpen === true)
-        {
-            Event.preventDefault();
-            SetIsOpen(false);
-        }
-    }
-
     return (
         <div
-            className="StatusFilterDropdown"
-            onKeyDown={HandleKeyDown}
-            ref={DropdownRoot}
+            aria-label={Strings.ProgressLedgerDescription}
+            className="ProgressStatusFilter"
+            role="group"
         >
-            <button
-                aria-expanded={IsOpen}
-                aria-label={Strings.Status}
-                className="StatusFilterDropdown__trigger"
-                onClick={() => SetIsOpen((CurrentValue) => CurrentValue === false)}
-                type="button"
-            >
-                {SelectedOption.Label}
-                <span aria-hidden="true">⌄</span>
-            </button>
-            {IsOpen === true && (
-                <div className="StatusFilterDropdown__list" role="listbox">
-                    {StatusFilterOptions.map((Option) => (
-                        <button
-                            aria-selected={Option.Value === Properties.Value}
-                            className={Option.Value === Properties.Value
-                                ? 'StatusFilterDropdown__option StatusFilterDropdown__option--selected'
-                                : 'StatusFilterDropdown__option'}
-                            key={Option.Value}
-                            onClick={() =>
-                            {
-                                Properties.OnChange(Option.Value);
-                                SetIsOpen(false);
-                            }}
-                            role="option"
-                            type="button"
-                        >
-                            {Option.Label}
-                            {Option.Value === Properties.Value && <span aria-hidden="true">✓</span>}
-                        </button>
-                    ))}
-                </div>
-            )}
+            {StatusFilterOptions.map((Option) => (
+                <button
+                    aria-pressed={Option.Value === Properties.Value}
+                    className={Option.Value === Properties.Value
+                        ? 'ProgressStatusFilter__button ProgressStatusFilter__button--active'
+                        : 'ProgressStatusFilter__button'}
+                    key={Option.Value}
+                    onClick={() => Properties.OnChange(Option.Value)}
+                    type="button"
+                >
+                    {Option.Label}
+                </button>
+            ))}
         </div>
     );
 }
@@ -201,9 +146,9 @@ export function EventLedgerSection(Properties: EventLedgerSectionProps)
             <div className="ContentSection__toolbar">
                 <div>
                     <h2>{Strings.ViewLedger}</h2>
-                    <p>{Strings.EventEditorDescription}</p>
+                    <p>{Strings.ProgressLedgerDescription}</p>
                 </div>
-                <StatusFilterDropdown
+                <ProgressStatusFilter
                     OnChange={Properties.OnChangeFilter}
                     Value={Properties.StatusFilter}
                 />
@@ -212,8 +157,8 @@ export function EventLedgerSection(Properties: EventLedgerSectionProps)
             {Properties.Records.length === 0 ? (
                 <div className="EmptyState">
                     <div className="EmptyState__icon" aria-hidden="true">☷</div>
-                    <h3>{Properties.HasAnyRecords ? Strings.EmptyFilterTitle : Strings.EmptyLedgerTitle}</h3>
-                    <p>{Properties.HasAnyRecords ? Strings.EmptyFilterDescription : Strings.EmptyLedgerDescription}</p>
+                    <h3>{Properties.HasAnyRecords ? Strings.EmptyFilterTitle : Strings.EmptyProgressTitle}</h3>
+                    <p>{Properties.HasAnyRecords ? Strings.EmptyFilterDescription : Strings.EmptyProgressDescription}</p>
                     {Properties.HasAnyRecords === false && (
                         <button className="Button Button--primary" onClick={Properties.OnAddEvent} type="button">
                             {Strings.AddEvent}
@@ -241,36 +186,36 @@ export function EventLedgerSection(Properties: EventLedgerSectionProps)
                         <tbody>
                             {VisibleRecords.map((Record) => (
                                 <tr key={Record.Id}>
-                                    <td className="EventIdentityCell">
+                                    <td className="EventIdentityCell" data-label={Strings.CompanyName}>
                                         <strong title={Record.CompanyName}>{Record.CompanyName}</strong>
                                         <span title={Record.EventName}>{Record.EventName}</span>
                                     </td>
-                                    <td className="EventScheduleCell">
+                                    <td className="EventScheduleCell" data-label={Strings.EventSchedule}>
                                         <span>{FormatDateRange(Record.EventStartDate, Record.EventEndDate)}</span>
                                     </td>
-                                    <td>
+                                    <td data-label={Strings.Status}>
                                         <span className={`StatusBadge StatusBadge--${Record.OperationalStatus}`}>
                                             {GetStatusLabel(Record.OperationalStatus)}
                                         </span>
                                     </td>
-                                    <td className="AssignedKiosksCell">
+                                    <td className="AssignedKiosksCell" data-label={Strings.AssignedKiosks}>
                                         {AssignedKiosksCell(Record.AssignedKioskIds, Properties.Kiosks)}
                                     </td>
-                                    <td>{CompletionButton(
+                                    <td data-label={Strings.ContractCompleted}>{CompletionButton(
                                         Record.ContractCompleted,
                                         () => Properties.OnToggleCompletion(Record.Id, 'ContractCompleted'),
                                     )}</td>
-                                    <td>{CompletionButton(
+                                    <td data-label={Strings.DepositPaid}>{CompletionButton(
                                         Record.DepositPaid,
                                         () => Properties.OnToggleCompletion(Record.Id, 'DepositPaid'),
                                     )}</td>
-                                    <td>{CompletionButton(
+                                    <td data-label={Strings.BalancePaid}>{CompletionButton(
                                         Record.BalancePaid,
                                         () => Properties.OnToggleCompletion(Record.Id, 'BalancePaid'),
                                     )}</td>
-                                    <td>{FormatInstallationDateTime(Record.InstallationDateTime)}</td>
-                                    <td>{FormatInstallationDateTime(Record.RecoveryDateTime)}</td>
-                                    <td>
+                                    <td data-label={Strings.InstallationDateTime}>{FormatInstallationDateTime(Record.InstallationDateTime)}</td>
+                                    <td data-label={Strings.RecoveryDateTime}>{FormatInstallationDateTime(Record.RecoveryDateTime)}</td>
+                                    <td data-label={Strings.Management}>
                                         <div className="TableActions">
                                             <button onClick={() => Properties.OnEdit(Record)} type="button">{Strings.Edit}</button>
                                             <button className="TableActions__delete" onClick={() => Properties.OnDelete(Record)} type="button">

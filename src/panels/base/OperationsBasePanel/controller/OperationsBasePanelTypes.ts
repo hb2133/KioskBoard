@@ -2,7 +2,7 @@ export type OperationsView = 'ledger' | 'calendar' | 'completed';
 
 export type EventOperationalStatus = 'scheduled' | 'active' | 'completed';
 
-export type EventStatusFilter = 'all' | EventOperationalStatus;
+export type EventStatusFilter = 'upcoming' | 'scheduled' | 'active';
 
 export type EventCompletionField = 'ContractCompleted' | 'DepositPaid' | 'BalancePaid';
 
@@ -11,6 +11,9 @@ export interface EventRecord
     Id: string;
     CompanyName: string;
     EventName: string;
+    Content: string;
+    ManagerName: string;
+    ManagerContact: string;
     EventStartDate: string;
     EventEndDate: string;
     AssignedKioskIds: string[];

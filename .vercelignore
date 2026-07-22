@@ -1,0 +1,12 @@
+.git/
+.vercel/
+.webpack/
+node_modules/
+out/
+dist-web/
+Saved/
+AgentWorks/
+docs/screenshots/
+*.zip
+*.7z
+*.exe

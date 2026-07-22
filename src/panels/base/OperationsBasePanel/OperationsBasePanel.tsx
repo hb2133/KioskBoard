@@ -209,58 +209,38 @@ const OperationsBasePanelStyles = `
         padding: 0 34px 0 12px;
     }
 
-    .StatusFilterDropdown {
-        min-width: 132px;
-        position: relative;
-    }
-
-    .StatusFilterDropdown__trigger {
-        align-items: center;
-        background: var(--color-surface-control);
+    .ProgressStatusFilter {
+        background: var(--color-surface-muted);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-control);
-        display: flex;
-        font-size: 13px;
-        font-weight: 700;
-        justify-content: space-between;
-        min-height: 40px;
-        padding: 0 12px;
-        width: 100%;
-    }
-
-    .StatusFilterDropdown__list {
-        background: var(--color-panel);
-        border: 1px solid var(--color-border);
-        border-radius: 10px;
-        box-shadow: 0 12px 30px rgba(18, 27, 43, 0.16);
         display: grid;
-        gap: 3px;
-        padding: 5px;
-        position: absolute;
-        right: 0;
-        top: calc(100% + 5px);
-        width: 100%;
-        z-index: 20;
+        gap: 4px;
+        grid-template-columns: repeat(3, auto);
+        padding: 4px;
     }
 
-    .StatusFilterDropdown__option {
-        align-items: center;
+    .ProgressStatusFilter__button {
         background: transparent;
-        border: 0;
+        border: 1px solid transparent;
         border-radius: 7px;
-        display: flex;
+        color: var(--color-text-muted);
         font-size: 12px;
-        justify-content: space-between;
-        min-height: 34px;
-        padding: 0 9px;
-        text-align: left;
+        font-weight: 750;
+        min-height: 32px;
+        padding: 0 11px;
+        white-space: nowrap;
     }
 
-    .StatusFilterDropdown__option:hover,
-    .StatusFilterDropdown__option--selected {
+    .ProgressStatusFilter__button:hover,
+    .ProgressStatusFilter__button--active {
         background: var(--color-primary-soft);
+        border-color: var(--color-primary);
         color: var(--color-primary);
-        font-weight: 800;
+    }
+
+    .ProgressStatusFilter__button--active {
+        box-shadow: 0 3px 9px rgba(51, 92, 255, 0.12);
+        font-weight: 850;
     }
 
     .TableViewport {
@@ -514,6 +494,8 @@ const OperationsBasePanelStyles = `
 
     .CalendarWeeks { display: grid; }
 
+    .MobileCalendarAgenda { display: none; }
+
     .CalendarWeek {
         border-bottom: 1px solid var(--color-border-subtle);
         position: relative;
@@ -536,6 +518,13 @@ const OperationsBasePanelStyles = `
     .CalendarDay:nth-child(7n) { border-right: 0; }
     .CalendarDay--muted { background: var(--color-surface-muted); color: var(--color-text-muted); }
 
+    .CalendarDay__date {
+        align-items: center;
+        display: flex;
+        gap: 5px;
+        min-width: 0;
+    }
+
     .CalendarDay__number {
         align-items: center;
         display: flex;
@@ -544,6 +533,20 @@ const OperationsBasePanelStyles = `
         height: 24px;
         justify-content: center;
         width: 24px;
+    }
+
+    .CalendarDay--weekend .CalendarDay__number,
+    .CalendarDay--holiday .CalendarDay__number,
+    .CalendarDay__holiday {
+        color: var(--color-danger);
+    }
+
+    .CalendarDay__holiday {
+        font-size: 10px;
+        font-weight: 750;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .CalendarDay--today .CalendarDay__number {
@@ -584,9 +587,11 @@ const OperationsBasePanelStyles = `
     .CalendarEvent--completed { background: #eef0f3; color: #687180; }
     .CalendarEvent--continued { border-left: 0; }
 
-    .CalendarEvent:hover {
+    .CalendarEvent:hover,
+    .CalendarEvent--highlighted {
         filter: brightness(0.96);
         outline: 1px solid currentColor;
+        z-index: 2;
     }
 
     .LayeredDialog--details {
@@ -810,7 +815,11 @@ const OperationsBasePanelStyles = `
     }
 
     .KioskSettingsBody {
+        max-height: min(680px, calc(100vh - 170px));
+        overflow-y: auto;
         padding: 22px 26px 26px;
+        scrollbar-color: var(--color-dialog-border) transparent;
+        scrollbar-width: thin;
     }
 
     .KioskRegistrationForm {
@@ -900,6 +909,63 @@ const OperationsBasePanelStyles = `
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+
+    .BackupRestoreSection {
+        border-top: 1px solid var(--color-border);
+        margin-top: 22px;
+        padding-top: 20px;
+    }
+
+    .BackupRestoreSection__header {
+        align-items: flex-start;
+        display: flex;
+        gap: 18px;
+        justify-content: space-between;
+    }
+
+    .BackupRestoreSection__header p {
+        color: var(--color-text-muted);
+        font-size: 12px;
+        line-height: 1.55;
+        margin: 5px 0 0;
+    }
+
+    .BackupRestoreEmpty,
+    .BackupRestorePreview {
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border-subtle);
+        border-radius: 11px;
+        margin-top: 13px;
+        padding: 14px;
+    }
+
+    .BackupRestoreEmpty {
+        color: var(--color-text-muted);
+        font-size: 13px;
+    }
+
+    .BackupRestorePreview {
+        display: grid;
+        gap: 9px;
+    }
+
+    .BackupRestorePreview > strong {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .BackupRestorePreview > span,
+    .BackupRestorePreview > div {
+        color: var(--color-text-muted);
+        display: flex;
+        font-size: 12px;
+        gap: 14px;
+    }
+
+    .BackupRestorePreview > button { justify-self: end; }
+    .BackupRestoreMessage { font-size: 12px; margin: 0; }
+    .BackupRestoreMessage--warning { color: var(--color-danger); font-weight: 750; }
 
     .ManagedKioskEmpty {
         align-items: center;
@@ -1303,13 +1369,15 @@ const OperationsBasePanelStyles = `
     }
 
     [data-theme="dark"] .StatusBadge--scheduled,
-    [data-theme="dark"] .CalendarEvent--scheduled {
+    [data-theme="dark"] .CalendarEvent--scheduled,
+    [data-theme="dark"] .MobileCalendarEvent--scheduled {
         background: #453715;
         color: #ffd477;
     }
 
     [data-theme="dark"] .StatusBadge--completed,
     [data-theme="dark"] .CalendarEvent--completed,
+    [data-theme="dark"] .MobileCalendarEvent--completed,
     [data-theme="dark"] .CompletionChip {
         background: #2a3442;
         color: #b6c0cd;
@@ -1317,6 +1385,7 @@ const OperationsBasePanelStyles = `
 
     [data-theme="dark"] .StatusBadge--active,
     [data-theme="dark"] .CalendarEvent--active,
+    [data-theme="dark"] .MobileCalendarEvent--active,
     [data-theme="dark"] .CompletionChip--done {
         background: #153d35;
         color: #72dec3;
@@ -1336,6 +1405,303 @@ const OperationsBasePanelStyles = `
         .OperationsBasePanel { padding: 24px 28px 36px; }
         .CheckGroup { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .CalendarDay { min-height: 88px; }
+    }
+
+    @media (max-width: 767px) {
+        html[data-runtime="web"] .OperationsBasePanel {
+            padding: 18px 14px 32px;
+        }
+
+        html[data-runtime="web"] .HeaderSection {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+
+        html[data-runtime="web"] .HeaderSection h1 {
+            font-size: 27px;
+            margin-top: 0;
+        }
+
+        html[data-runtime="web"] .HeaderActions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            width: 100%;
+        }
+
+        html[data-runtime="web"] .HeaderActions > button {
+            justify-content: center;
+            min-width: 0;
+            padding-left: 10px;
+            padding-right: 10px;
+            width: 100%;
+        }
+
+        html[data-runtime="web"] .SummarySection {
+            gap: 9px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            margin-bottom: 16px;
+        }
+
+        html[data-runtime="web"] .SummaryCard {
+            min-height: 92px;
+            padding: 16px;
+        }
+
+        html[data-runtime="web"] .SummaryCard p {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+
+        html[data-runtime="web"] .SummaryCard strong { font-size: 27px; }
+
+        html[data-runtime="web"] .ViewNavigationSection {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            width: 100%;
+        }
+
+        html[data-runtime="web"] .ViewTab {
+            gap: 3px;
+            justify-content: center;
+            padding: 0 5px;
+        }
+
+        html[data-runtime="web"] .ViewTab > span { display: none; }
+
+        html[data-runtime="web"] .ContentSection {
+            border-radius: 14px;
+            min-height: 320px;
+        }
+
+        html[data-runtime="web"] .ContentSection__toolbar {
+            align-items: stretch;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 0;
+            padding: 17px 16px;
+        }
+
+        html[data-runtime="web"] .ProgressStatusFilter {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            width: 100%;
+        }
+
+        html[data-runtime="web"] .ProgressStatusFilter__button {
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+
+        html[data-runtime="web"] .TableViewport { padding: 12px; }
+        html[data-runtime="web"] table,
+        html[data-runtime="web"] tbody { display: block; }
+        html[data-runtime="web"] thead { display: none; }
+        html[data-runtime="web"] tbody {
+            display: grid;
+            gap: 12px;
+        }
+
+        html[data-runtime="web"] tbody tr {
+            background: var(--color-panel);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            display: block;
+            overflow: hidden;
+        }
+
+        html[data-runtime="web"] tbody td {
+            align-items: center;
+            border-top: 1px solid var(--color-border-subtle);
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            min-height: 46px;
+            padding: 10px 12px;
+            text-align: right;
+            white-space: normal;
+            width: auto !important;
+        }
+
+        html[data-runtime="web"] tbody td:first-child { border-top: 0; }
+        html[data-runtime="web"] tbody td::before {
+            color: var(--color-text-muted);
+            content: attr(data-label);
+            flex: 0 0 92px;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: left;
+        }
+
+        html[data-runtime="web"] .EventIdentityCell,
+        html[data-runtime="web"] .AssignedKiosksCell,
+        html[data-runtime="web"] .CompletedLedgerTable__identity {
+            display: grid;
+            grid-template-columns: 92px minmax(0, 1fr);
+        }
+
+        html[data-runtime="web"] .EventIdentityCell::before,
+        html[data-runtime="web"] .AssignedKiosksCell::before,
+        html[data-runtime="web"] .CompletedLedgerTable__identity::before {
+            grid-row: 1 / 3;
+        }
+
+        html[data-runtime="web"] .EventIdentityCell > *,
+        html[data-runtime="web"] .AssignedKiosksCell > *,
+        html[data-runtime="web"] .CompletedLedgerTable__identity > * {
+            grid-column: 2;
+            justify-self: end;
+            max-width: 100%;
+        }
+
+        html[data-runtime="web"] .EventScheduleCell > span { text-align: right; }
+        html[data-runtime="web"] .TableActions { justify-content: flex-end; }
+
+        html[data-runtime="web"] .CalendarGrid--weekdays,
+        html[data-runtime="web"] .CalendarWeeks { display: none; }
+
+        html[data-runtime="web"] .MobileCalendarAgenda {
+            display: grid;
+            gap: 10px;
+            padding: 12px;
+        }
+
+        html[data-runtime="web"] .MobileCalendarAgenda__empty {
+            color: var(--color-text-muted);
+            margin: 36px 0;
+            text-align: center;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay {
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay--today { border-color: var(--color-primary); }
+        html[data-runtime="web"] .MobileCalendarDay > header {
+            align-items: center;
+            background: var(--color-surface-muted);
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 12px;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay > header span {
+            background: var(--color-primary);
+            border-radius: 99px;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 7px;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay__date {
+            align-items: baseline;
+            display: flex;
+            gap: 7px;
+            min-width: 0;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay__date--holiday strong,
+        html[data-runtime="web"] .MobileCalendarDay__date--holiday small {
+            color: var(--color-danger);
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay__date small {
+            font-size: 10px;
+            font-weight: 750;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay > p {
+            color: var(--color-text-muted);
+            font-size: 12px;
+            margin: 0;
+            padding: 14px 12px;
+        }
+
+        html[data-runtime="web"] .MobileCalendarDay__events {
+            display: grid;
+            gap: 7px;
+            padding: 10px;
+        }
+
+        html[data-runtime="web"] .MobileCalendarEvent {
+            border: 0;
+            border-left: 4px solid currentColor;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 750;
+            min-height: 40px;
+            overflow: hidden;
+            padding: 8px 10px;
+            text-align: left;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        html[data-runtime="web"] .MobileCalendarEvent--scheduled { background: #fff7e3; color: #94600a; }
+        html[data-runtime="web"] .MobileCalendarEvent--active { background: #e8f7f2; color: #08705a; }
+        html[data-runtime="web"] .MobileCalendarEvent--completed { background: #eef0f3; color: #687180; }
+
+        html[data-runtime="web"] .PanelLayer {
+            align-items: stretch;
+            padding: 8px;
+        }
+
+        html[data-runtime="web"] .PanelLayer__content {
+            max-height: calc(100vh - 58px);
+            max-width: none;
+        }
+
+        html[data-runtime="web"] .LayeredDialog {
+            border-radius: 14px;
+            max-height: calc(100vh - 58px);
+        }
+
+        html[data-runtime="web"] .LayeredDialog__header { padding: 18px 16px 15px; }
+        html[data-runtime="web"] .EventForm,
+        html[data-runtime="web"] .KioskSettingsBody,
+        html[data-runtime="web"] .EventDetailsBody { padding: 16px; }
+
+        html[data-runtime="web"] .EventForm__grid,
+        html[data-runtime="web"] .EventDetailsGrid,
+        html[data-runtime="web"] .EventDetailsCompletion,
+        html[data-runtime="web"] .KioskRegistrationForm__row,
+        html[data-runtime="web"] .BackupRestoreSection__header {
+            grid-template-columns: 1fr;
+        }
+
+        html[data-runtime="web"] .BackupRestoreSection__header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        html[data-runtime="web"] .KioskSelectionGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        html[data-runtime="web"] .CheckGroup { grid-template-columns: 1fr; }
+        html[data-runtime="web"] .FormField--wide,
+        html[data-runtime="web"] .EventDetailItem--wide { grid-column: auto; }
+
+        html[data-runtime="web"] .LocalizedPickerPopover,
+        html[data-runtime="web"] .LocalizedPickerPopover--datetime {
+            left: 12px !important;
+            max-height: calc(100vh - 82px);
+            overflow-y: auto;
+            right: 12px !important;
+            top: 54px !important;
+            width: auto;
+        }
+
+        html[data-runtime="web"] .LayeredDialog__footer {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        html[data-runtime="web"] .LayeredDialog__footer .Button { width: 100%; }
+        html[data-runtime="web"] .LayeredDialog--confirm { padding: 24px 18px; }
     }
 `;
 
@@ -1387,7 +1753,9 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
                     Kiosks={Controller.ManagedKiosks}
                     OnAddKiosk={Controller.AddManagedKiosk}
                     OnDeleteKiosk={Controller.DeleteManagedKiosk}
+                    OnRestoreBackup={Controller.RestoreBackup}
                     OnRequestClose={Controller.CloseLayeredPanel}
+                    OnSelectBackupFile={Controller.SelectBackupFile}
                 />
             ),
         });
@@ -1417,6 +1785,7 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
             <HeaderSection
                 OnAddEvent={Controller.OpenCreateEvent}
                 OnOpenSettings={Controller.OpenKioskSettings}
+                OnSignOut={Properties.OnSignOut}
                 OnToggleTheme={Properties.OnToggleTheme}
                 Theme={Properties.Theme}
                 TodayKey={Controller.TodayKey}
@@ -1437,7 +1806,7 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
                 <>
                     {Controller.CurrentView === 'ledger' && (
                         <EventLedgerSection
-                            HasAnyRecords={Controller.Records.length > 0}
+                            HasAnyRecords={Controller.Records.some((Record) => Record.OperationalStatus !== 'completed')}
                             Kiosks={Controller.ManagedKiosks}
                             OnAddEvent={Controller.OpenCreateEvent}
                             OnChangeFilter={Controller.SetStatusFilter}
@@ -1451,6 +1820,7 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
                     {Controller.CurrentView === 'calendar' && (
                         <CalendarSection
                             Days={Controller.CalendarDays}
+                            Holidays={Controller.CalendarHolidays}
                             MonthKey={Controller.CalendarMonth}
                             OnMoveMonth={Controller.MoveCalendarMonth}
                             OnMoveToToday={Controller.MoveCalendarToToday}

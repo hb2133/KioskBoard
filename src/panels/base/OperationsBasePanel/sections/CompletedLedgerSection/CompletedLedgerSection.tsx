@@ -66,16 +66,16 @@ export function CompletedLedgerSection(Properties: CompletedLedgerSectionProps)
                         <tbody>
                             {VisibleRecords.map((Record) => (
                                 <tr key={Record.Id}>
-                                    <td className="CompletedLedgerTable__identity">
+                                    <td className="CompletedLedgerTable__identity" data-label={Strings.CompanyName}>
                                         <strong>{Record.CompanyName}</strong>
                                         <span>{Record.EventName}</span>
                                     </td>
-                                    <td>{FormatDateRange(Record.EventStartDate, Record.EventEndDate)}</td>
-                                    <td>{ResultButton(
+                                    <td data-label={Strings.EventSchedule}>{FormatDateRange(Record.EventStartDate, Record.EventEndDate)}</td>
+                                    <td data-label={Strings.DepositPaid}>{ResultButton(
                                         Record.DepositPaid,
                                         () => Properties.OnToggleCompletion(Record.Id, 'DepositPaid'),
                                     )}</td>
-                                    <td>{ResultButton(
+                                    <td data-label={Strings.BalancePaid}>{ResultButton(
                                         Record.BalancePaid,
                                         () => Properties.OnToggleCompletion(Record.Id, 'BalancePaid'),
                                     )}</td>

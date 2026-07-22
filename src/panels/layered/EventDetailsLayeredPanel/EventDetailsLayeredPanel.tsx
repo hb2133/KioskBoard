@@ -83,6 +83,18 @@ export function EventDetailsLayeredPanel(Properties: EventDetailsLayeredPanelPro
                         <span>{Strings.EventName}</span>
                         <strong>{Properties.Record.EventName}</strong>
                     </div>
+                    <div className="EventDetailItem EventDetailItem--wide">
+                        <span>{Strings.Content}</span>
+                        <strong>{Properties.Record.Content || '—'}</strong>
+                    </div>
+                    <div className="EventDetailItem">
+                        <span>{Strings.ManagerName}</span>
+                        <strong>{Properties.Record.ManagerName || '—'}</strong>
+                    </div>
+                    <div className="EventDetailItem">
+                        <span>{Strings.ManagerContact}</span>
+                        <strong>{Properties.Record.ManagerContact || '—'}</strong>
+                    </div>
                     <div className="EventDetailItem">
                         <span>{Strings.EventSchedule}</span>
                         <strong>{FormatDateRange(Properties.Record.EventStartDate, Properties.Record.EventEndDate)}</strong>
