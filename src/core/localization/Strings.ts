@@ -111,6 +111,7 @@ export const Strings = {
     DeleteDialogDescription: '삭제한 행사 정보는 복구할 수 없습니다.',
     StorageError: '정보를 로컬 저장소에 저장하지 못했습니다.',
     SharedStorageError: '공유 저장소와 동기화하지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.',
+    SessionLoading: '로그인 정보를 확인하고 있습니다.',
     Loading: '행사 정보를 불러오는 중입니다.',
     CloseDialog: '창 닫기',
     Optional: '선택',

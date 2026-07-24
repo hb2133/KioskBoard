@@ -113,6 +113,65 @@ export function GlobalStyles()
                 border-radius: 99px;
             }
 
+            .AppLoadingState {
+                align-items: center;
+                display: flex;
+                justify-content: center;
+                min-height: 100%;
+                padding: 48px 24px;
+            }
+
+            .AppLoadingState__content {
+                align-items: center;
+                display: flex;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .AppLoadingState__brand {
+                align-items: center;
+                background: var(--color-primary);
+                border-radius: 14px;
+                box-shadow: 0 12px 28px rgba(51, 92, 255, 0.24);
+                color: #ffffff;
+                display: flex;
+                font-size: 24px;
+                font-weight: 900;
+                height: 54px;
+                justify-content: center;
+                margin-bottom: 28px;
+                width: 54px;
+            }
+
+            .AppLoadingState__spinner {
+                animation: AppLoadingStateSpin 800ms linear infinite;
+                border: 3px solid var(--color-border);
+                border-radius: 50%;
+                border-top-color: var(--color-primary);
+                height: 34px;
+                margin-bottom: 18px;
+                width: 34px;
+            }
+
+            .AppLoadingState strong {
+                font-size: 17px;
+                letter-spacing: -0.02em;
+            }
+
+            .AppLoadingState p {
+                color: var(--color-text-muted);
+                font-size: 13px;
+                margin: 8px 0 0;
+            }
+
+            @keyframes AppLoadingStateSpin {
+                to { transform: rotate(360deg); }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                .AppLoadingState__spinner { animation-duration: 1600ms; }
+            }
+
             .DesktopTitleBar__brand {
                 align-items: center;
                 display: flex;

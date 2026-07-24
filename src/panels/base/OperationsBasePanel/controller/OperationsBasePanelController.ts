@@ -41,6 +41,7 @@ import type {
 } from './OperationsBasePanelTypes';
 
 const OperationsViewOrder: OperationsView[] = ['ledger', 'calendar', 'completed'];
+const InitialLoadRetryDelayMilliseconds = 500;
 
 export interface OperationsBasePanelControllerModel
 {
@@ -97,8 +98,28 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
         let IsMounted = true;
         let IsSynchronizing = false;
         let HasCheckedInitialMigration = false;
+        let HasCompletedInitialLoad = false;
         const LocalRecords = LoadEventRecordsAction();
         const LocalKiosks = LoadManagedKiosksAction();
+
+        async function LoadSnapshotWithInitialRetry()
+        {
+            try
+            {
+                return await LoadSharedOperationsSnapshot();
+            }
+            catch (ErrorValue)
+            {
+                if (HasCompletedInitialLoad === true)
+                {
+                    throw ErrorValue;
+                }
+
+                await new Promise((Resolve) =>
+                    window.setTimeout(Resolve, InitialLoadRetryDelayMilliseconds));
+                return LoadSharedOperationsSnapshot();
+            }
+        }
 
         async function ApplySharedSnapshot(): Promise<void>
         {
@@ -110,7 +131,7 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
             IsSynchronizing = true;
             try
             {
-                let Snapshot = await LoadSharedOperationsSnapshot();
+                let Snapshot = await LoadSnapshotWithInitialRetry();
                 const ShouldMigrateLocalSnapshot = HasCheckedInitialMigration === false
                     && Snapshot.Records.length === 0
                     && Snapshot.Kiosks.length === 0
@@ -151,6 +172,7 @@ export function UseOperationsBasePanelController(): OperationsBasePanelControlle
             }
             finally
             {
+                HasCompletedInitialLoad = true;
                 IsSynchronizing = false;
                 if (IsMounted === true) SetIsReady(true);
             }

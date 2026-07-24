@@ -1,5 +1,6 @@
 import { PanelLayerHost } from '@/app/frontend/panel_layer/PanelLayerHost';
 import type { PanelLayerItem } from '@/app/frontend/panel_layer/PanelLayerHost';
+import { AppLoadingState } from '@/app/frontend/shell/AppLoadingState';
 import { Strings } from '@/core/localization/Strings';
 import { DeleteConfirmLayeredPanel } from '@/panels/layered/DeleteConfirmLayeredPanel/DeleteConfirmLayeredPanel';
 import { EventEditorLayeredPanel } from '@/panels/layered/EventEditorLayeredPanel/EventEditorLayeredPanel';
@@ -1710,6 +1711,11 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
     const Controller = UseOperationsBasePanelController();
     const Layers: PanelLayerItem[] = [];
 
+    if (Controller.IsReady === false)
+    {
+        return <AppLoadingState Message={Strings.Loading} />;
+    }
+
     if (Controller.LayeredPanel?.Kind === 'event-editor')
     {
         Layers.push({
@@ -1800,40 +1806,34 @@ export function OperationsBasePanel(Properties: OperationsBasePanelProps)
                 <div className="StorageBanner" role="alert">{Controller.StorageError}</div>
             )}
 
-            {Controller.IsReady === false ? (
-                <div className="LoadingState">{Strings.Loading}</div>
-            ) : (
-                <>
-                    {Controller.CurrentView === 'ledger' && (
-                        <EventLedgerSection
-                            HasAnyRecords={Controller.Records.some((Record) => Record.OperationalStatus !== 'completed')}
-                            Kiosks={Controller.ManagedKiosks}
-                            OnAddEvent={Controller.OpenCreateEvent}
-                            OnChangeFilter={Controller.SetStatusFilter}
-                            OnDelete={Controller.OpenDeleteEvent}
-                            OnEdit={Controller.OpenEditEvent}
-                            OnToggleCompletion={Controller.ToggleEventCompletion}
-                            Records={Controller.FilteredRecords}
-                            StatusFilter={Controller.StatusFilter}
-                        />
-                    )}
-                    {Controller.CurrentView === 'calendar' && (
-                        <CalendarSection
-                            Days={Controller.CalendarDays}
-                            Holidays={Controller.CalendarHolidays}
-                            MonthKey={Controller.CalendarMonth}
-                            OnMoveMonth={Controller.MoveCalendarMonth}
-                            OnMoveToToday={Controller.MoveCalendarToToday}
-                            OnOpenEvent={Controller.OpenEventDetails}
-                        />
-                    )}
-                    {Controller.CurrentView === 'completed' && (
-                        <CompletedLedgerSection
-                            OnToggleCompletion={Controller.ToggleEventCompletion}
-                            Records={Controller.CompletedRecords}
-                        />
-                    )}
-                </>
+            {Controller.CurrentView === 'ledger' && (
+                <EventLedgerSection
+                    HasAnyRecords={Controller.Records.some((Record) => Record.OperationalStatus !== 'completed')}
+                    Kiosks={Controller.ManagedKiosks}
+                    OnAddEvent={Controller.OpenCreateEvent}
+                    OnChangeFilter={Controller.SetStatusFilter}
+                    OnDelete={Controller.OpenDeleteEvent}
+                    OnEdit={Controller.OpenEditEvent}
+                    OnToggleCompletion={Controller.ToggleEventCompletion}
+                    Records={Controller.FilteredRecords}
+                    StatusFilter={Controller.StatusFilter}
+                />
+            )}
+            {Controller.CurrentView === 'calendar' && (
+                <CalendarSection
+                    Days={Controller.CalendarDays}
+                    Holidays={Controller.CalendarHolidays}
+                    MonthKey={Controller.CalendarMonth}
+                    OnMoveMonth={Controller.MoveCalendarMonth}
+                    OnMoveToToday={Controller.MoveCalendarToToday}
+                    OnOpenEvent={Controller.OpenEventDetails}
+                />
+            )}
+            {Controller.CurrentView === 'completed' && (
+                <CompletedLedgerSection
+                    OnToggleCompletion={Controller.ToggleEventCompletion}
+                    Records={Controller.CompletedRecords}
+                />
             )}
 
             <PanelLayerHost Layers={Layers} />

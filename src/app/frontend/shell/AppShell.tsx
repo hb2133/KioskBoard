@@ -2,7 +2,9 @@ import { GlobalStyles } from '@/design/GlobalDesign.global';
 import { OperationsBasePanel } from '@/panels/base/OperationsBasePanel/OperationsBasePanel';
 import { AuthenticationBasePanel } from '@/panels/base/AuthenticationBasePanel/AuthenticationBasePanel';
 import { UseAuthManager } from '@/managers/auth/AuthManager';
+import { Strings } from '@/core/localization/Strings';
 import { UseAppThemeController } from './AppThemeController';
+import { AppLoadingState } from './AppLoadingState';
 import { DesktopTitleBar } from './DesktopTitleBar';
 
 export function AppShell()
@@ -28,7 +30,9 @@ export function AppShell()
                         IsSubmitting={AuthManager.IsSubmitting}
                         OnSignIn={AuthManager.SignIn}
                     />
-                ) : null}
+                ) : (
+                    <AppLoadingState Message={Strings.SessionLoading} />
+                )}
             </div>
         </>
     );

@@ -30,20 +30,60 @@ export function UseAuthManager(): AuthManagerModel
             return undefined;
         }
 
-        void Client.auth.getSession().then(({ data, error }) =>
-        {
-            SetSessionValue(data.session);
-            SetErrorMessage(error?.message ?? null);
-            SetIsReady(true);
-        });
+        let IsMounted = true;
+        let Subscription: ReturnType<typeof Client.auth.onAuthStateChange>['data'] | null = null;
 
-        const { data: Subscription } = Client.auth.onAuthStateChange((_Event, NextSession) =>
+        async function InitializeAuth(): Promise<void>
         {
+            const { data, error } = await Client.auth.getSession();
+            let NextSession = data.session;
+            let NextError = error;
+
+            if (NextSession != null && NextError == null)
+            {
+                const { error: UserError } = await Client.auth.getUser();
+                NextError = UserError;
+
+                if (UserError == null)
+                {
+                    const { data: RefreshedSessionData, error: RefreshedSessionError } =
+                        await Client.auth.getSession();
+                    NextSession = RefreshedSessionData.session;
+                    NextError = RefreshedSessionError;
+                }
+                else
+                {
+                    NextSession = null;
+                }
+            }
+
+            if (IsMounted === false)
+            {
+                return;
+            }
+
             SetSessionValue(NextSession);
+            SetErrorMessage(NextError?.message ?? null);
             SetIsReady(true);
-        });
 
-        return () => Subscription.subscription.unsubscribe();
+            Subscription = Client.auth.onAuthStateChange((_Event, ChangedSession) =>
+            {
+                if (IsMounted === true)
+                {
+                    SetSessionValue(ChangedSession);
+                    SetErrorMessage(null);
+                    SetIsReady(true);
+                }
+            }).data;
+        }
+
+        void InitializeAuth();
+
+        return () =>
+        {
+            IsMounted = false;
+            Subscription?.subscription.unsubscribe();
+        };
     }, [Client]);
 
     async function SignIn(Email: string, Password: string): Promise<boolean>
